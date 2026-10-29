@@ -1,0 +1,476 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Employee Handbook AI</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f5f7fb;
+            color: #1f2937;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            height: 70px;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            padding: 0 30px;
+        }
+
+        .logo {
+            font-size: 21px;
+            font-weight: 700;
+        }
+
+        .logo span {
+            color: #2563eb;
+        }
+
+        .main {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 950px;
+            display: flex;
+            flex-direction: column;
+            padding: 30px;
+        }
+
+        .welcome {
+            text-align: center;
+            margin-top: 70px;
+            margin-bottom: 30px;
+        }
+
+        .welcome-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .welcome h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .welcome p {
+            color: #6b7280;
+            font-size: 16px;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 5px 20px;
+        }
+
+        .message {
+            margin-bottom: 24px;
+            display: flex;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .bubble {
+            max-width: 75%;
+            padding: 14px 17px;
+            border-radius: 14px;
+            line-height: 1.6;
+            font-size: 15px;
+        }
+
+        .user .bubble {
+            background: #2563eb;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .assistant .bubble {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-bottom-left-radius: 4px;
+        }
+
+        .sources {
+            margin-top: 12px;
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .source {
+            display: inline-block;
+            background: #f3f4f6;
+            padding: 5px 9px;
+            border-radius: 6px;
+            margin: 4px 4px 0 0;
+        }
+
+        .input-area {
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            padding: 8px 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        #question {
+            flex: 1;
+            border: none;
+            outline: none;
+            resize: none;
+            font-family: inherit;
+            font-size: 15px;
+            padding: 10px;
+            min-height: 42px;
+        }
+
+        #send {
+            width: 44px;
+            height: 44px;
+            border: none;
+            border-radius: 10px;
+            background: #2563eb;
+            color: white;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        #send:hover {
+            background: #1d4ed8;
+        }
+
+        #send:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .typing {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 700px) {
+
+            .chat-container {
+                padding: 15px;
+            }
+
+            .welcome {
+                margin-top: 30px;
+            }
+
+            .welcome h1 {
+                font-size: 25px;
+            }
+
+            .bubble {
+                max-width: 90%;
+            }
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+    <header class="header">
+
+        <div class="logo">
+
+            📘 Employee
+            <span>Handbook AI</span>
+
+        </div>
+
+    </header>
+
+
+    <main class="main">
+
+        <div class="chat-container">
+
+            <div
+                class="welcome"
+                id="welcome"
+            >
+
+                <div class="welcome-icon">
+                    📘
+                </div>
+
+                <h1>
+                    Ask the Employee Handbook
+                </h1>
+
+                <p>
+                    Get answers directly from
+                    your company's handbook.
+                </p>
+
+            </div>
+
+
+            <div
+                class="messages"
+                id="messages"
+            >
+            </div>
+
+
+            <div
+                class="typing"
+                id="typing"
+                style="display:none;"
+            >
+                Searching the handbook...
+            </div>
+
+
+            <div class="input-area">
+
+                <textarea
+                    id="question"
+                    placeholder="Ask the handbook..."
+                    rows="1"
+                ></textarea>
+
+                <button
+                    id="send"
+                    onclick="sendQuestion()"
+                >
+                    ➤
+                </button>
+
+            </div>
+
+        </div>
+
+    </main>
+
+
+    <script>
+
+        const questionInput =
+            document.getElementById("question");
+
+        const messages =
+            document.getElementById("messages");
+
+        const welcome =
+            document.getElementById("welcome");
+
+        const typing =
+            document.getElementById("typing");
+
+        const sendButton =
+            document.getElementById("send");
+
+
+        async function sendQuestion() {
+
+            const question =
+                questionInput.value.trim();
+
+            if (!question) {
+                return;
+            }
+
+            welcome.style.display = "none";
+
+            addMessage(
+                question,
+                "user"
+            );
+
+            questionInput.value = "";
+
+            typing.style.display = "block";
+
+            sendButton.disabled = true;
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/ask",
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body:
+                                JSON.stringify({
+                                    question:
+                                        question
+                                })
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                addMessage(
+                    data.answer,
+                    "assistant",
+                    data.sources || []
+                );
+
+
+            } catch (error) {
+
+                addMessage(
+                    "Something went wrong. Please try again.",
+                    "assistant"
+                );
+
+            }
+
+
+            typing.style.display = "none";
+
+            sendButton.disabled = false;
+
+            questionInput.focus();
+
+        }
+
+
+        function addMessage(
+            text,
+            type,
+            sources = []
+        ) {
+
+            const message =
+                document.createElement("div");
+
+            message.className =
+                "message " + type;
+
+
+            const bubble =
+                document.createElement("div");
+
+            bubble.className = "bubble";
+
+
+            bubble.innerHTML =
+                text.replace(
+                    /\n/g,
+                    "<br>"
+                );
+
+
+            message.appendChild(bubble);
+
+
+            if (
+                type === "assistant" &&
+                sources.length > 0
+            ) {
+
+                const sourceContainer =
+                    document.createElement("div");
+
+                sourceContainer.className =
+                    "sources";
+
+
+                sources.forEach(
+                    source => {
+
+                        const sourceElement =
+                            document.createElement("span");
+
+                        sourceElement.className =
+                            "source";
+
+                        sourceElement.textContent =
+                            "📄 " + source;
+
+                        sourceContainer.appendChild(
+                            sourceElement
+                        );
+
+                    }
+                );
+
+
+                bubble.appendChild(
+                    sourceContainer
+                );
+
+            }
+
+
+            messages.appendChild(message);
+
+            messages.scrollTop =
+                messages.scrollHeight;
+
+        }
+
+
+        questionInput.addEventListener(
+            "keydown",
+            function(event) {
+
+                if (
+                    event.key === "Enter" &&
+                    !event.shiftKey
+                ) {
+
+                    event.preventDefault();
+
+                    sendQuestion();
+
+                }
+
+            }
+        );
+
+    </script>
+
+</body>
+
+</html>
+
